@@ -25,7 +25,6 @@ textmenu::MenuList default_list{textmenu::MenuEntry{"Hello, not cruel world! I a
 void signal_handler(int signum)
 {
     oled.UpdateEntries(textmenu::MenuList{});
-    oled.Sleep();
     oled.Stop();
     exit(signum);
 }
@@ -87,7 +86,7 @@ int main()
             
             if (ev_rotate.type == EV_REL)
             {
-                oled.UpdateIndex(ev_rotate.value);
+                oled.RequestIndexChange(ev_rotate.value);
             }
         }
 
@@ -106,20 +105,9 @@ int main()
             {
                 if (oled.GetCurrentIndex() == 3)
                 {
-                    oled.Sleep();
                     oled.Stop();
                     exit(0);
                 }
-
-                if (displayToggle)
-                {
-                    oled.Sleep();
-                }
-                else
-                {
-                    oled.Wake();
-                }
-                displayToggle = !displayToggle;
             }
         }
 

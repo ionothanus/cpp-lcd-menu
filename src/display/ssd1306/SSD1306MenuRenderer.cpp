@@ -46,12 +46,9 @@ namespace textmenu
         };
 
         SSD1306MenuRenderer::SSD1306MenuRenderer()
-            : m_thread{},
-              m_cv_mutex{},
-              m_thread_cv{},
+            :
               m_local_list{},
               m_oled{"/dev/i2c-1", 0x3D},
-              m_terminate{false},
               m_update_required{false},
               m_selected_index{0},
               m_display_start_index{0},
@@ -68,32 +65,12 @@ namespace textmenu
 
         SSD1306MenuRenderer::~SSD1306MenuRenderer()
         {
+            m_oled.displayOff();
             m_oled.clear();
             m_oled.displayUpdate();
-            m_oled.displayOff();
         }
 
         /// Public API
-
-        void SSD1306MenuRenderer::Run()
-        {
-            if (!m_thread.joinable())
-            {
-                m_terminate = false;
-                m_thread = std::thread{[this](){ RenderThread(); } };
-            }
-        }
-
-        void SSD1306MenuRenderer::Stop()
-        {
-            m_terminate = true;
-            m_thread_cv.notify_all();
-
-            if (m_thread.joinable())
-            {
-                m_thread.join();
-            }
-        }
 
         void SSD1306MenuRenderer::UpdateEntries(const MenuList& entries)
         {
@@ -106,25 +83,29 @@ namespace textmenu
             m_thread_cv.notify_one();
         }
 
-        void SSD1306MenuRenderer::UpdateIndex(int rel_offset)
+        void SSD1306MenuRenderer::RequestIndexChange(int rel_offset)
         {
             {
                 std::lock_guard<std::mutex> lock {m_cv_mutex};
-                m_selected_index = std::clamp(m_selected_index += rel_offset,
-                                              MIN_LIST_INDEX,
-                                              static_cast<int>(m_local_list.size() - 1));
 
-                if (rel_offset > 0 && m_selected_index - m_display_start_index > (MAX_ENTRIES - 1))
+                if (m_screen_state == ScreenState::On)
                 {
-                    m_display_start_index = std::clamp(++m_display_start_index,
-                                                       0,
-                                                       static_cast<int>(m_local_list.size() - MAX_ENTRIES));
-                }
-                else if (rel_offset < 0 && m_selected_index < m_display_start_index)
-                {
-                    m_display_start_index = std::clamp(--m_display_start_index,
-                                    0,
-                                    static_cast<int>(m_local_list.size() - MAX_ENTRIES));
+                    m_selected_index = std::clamp(m_selected_index += rel_offset,
+                        MIN_LIST_INDEX,
+                        static_cast<int>(m_local_list.size() - 1));
+
+                    if (rel_offset > 0 && m_selected_index - m_display_start_index > (MAX_ENTRIES - 1))
+                    {
+                        m_display_start_index = std::clamp(++m_display_start_index,
+                            0,
+                            static_cast<int>(m_local_list.size() - MAX_ENTRIES));
+                    }
+                    else if (rel_offset < 0 && m_selected_index < m_display_start_index)
+                    {
+                        m_display_start_index = std::clamp(--m_display_start_index,
+                            0,
+                            static_cast<int>(m_local_list.size() - MAX_ENTRIES));
+                    }
                 }
 
                 m_update_required = true;
@@ -152,7 +133,7 @@ namespace textmenu
 
         /// Worker thread implementations
 
-        void SSD1306MenuRenderer::RenderThread()
+        void SSD1306MenuRenderer::ThreadFunction()
         {
             while (!m_terminate)
             {

@@ -15,7 +15,10 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty)
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/libSSD1306)
 
-add_library(displaySSD1306 STATIC src/display/ssd1306/SSD1306MenuRenderer.cpp)
+add_library(displaySSD1306 STATIC src/BasicTask.cpp
+                                  src/display/ssd1306/SSD1306MenuRenderer.cpp
+                                  )
+
 
 target_include_directories(text-menu PUBLIC .)
 target_include_directories(text-menu PUBLIC ./src)

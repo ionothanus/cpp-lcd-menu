@@ -1,34 +1,25 @@
 #ifndef SRC_DISPLAY_SSD1306MENURENDERER_H
 #define SRC_DISPLAY_SSD1306MENURENDERER_H
 
-#include <thread>
-#include <condition_variable>
-#include <mutex>
-#include <atomic>
-
 #include "libSSD1306/lib/OledI2C.h"
 #include "libSSD1306/lib/OledFont8x16.h"
 
 #include "IMenuRenderer.h"
+#include "BasicTask.h"
 
 namespace textmenu
 {
     namespace display
     {
-        class SSD1306MenuRenderer : IMenuRenderer
+        class SSD1306MenuRenderer : public IMenuRenderer, public BasicTask
         {
         public:
             SSD1306MenuRenderer();
             ~SSD1306MenuRenderer();
 
             void UpdateEntries(const MenuList& entries) override;
-            void UpdateIndex(int rel_offset) override;
+            void RequestIndexChange(int rel_offset) override;
             int GetCurrentIndex() override;
-            void Sleep() override;
-            void Wake() override;
-
-            void Run();
-            void Stop();
 
         private:
 
@@ -46,16 +37,14 @@ namespace textmenu
                 Off
             };
 
-            void RenderThread();
+            void ThreadFunction() override;
             void RedrawMenu();
             bool ScrollSelectedLine();
+            void Sleep();
+            void Wake();
 
-            std::thread m_thread;
-            std::mutex m_cv_mutex;
-            std::condition_variable m_thread_cv;
             MenuList m_local_list;
             SSD1306::OledI2C m_oled;
-            std::atomic<bool> m_terminate;
             std::atomic<bool> m_update_required;
 
             std::atomic<int> m_selected_index;
