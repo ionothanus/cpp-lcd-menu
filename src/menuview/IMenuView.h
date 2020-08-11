@@ -7,10 +7,10 @@
 
 namespace textmenu
 {
-    class IMenuRenderer
+    class IMenuView
     {
     public:
-        virtual ~IMenuRenderer() noexcept = default;
+        virtual ~IMenuView() noexcept = default;
 
         /// @brief Update the current list of entries.
         /// @param entries: the list of MenuEntries to display
@@ -26,8 +26,16 @@ namespace textmenu
         /// @brief Gets the index of the currently-selected menu entry.
         /// @return the index of the currently-selected entry
         virtual int GetCurrentIndex() = 0;
+
+    protected:
+        enum class ScrollDirection
+        {
+            None,
+            Forward,
+            Reverse,
+            Hold
+        };
     };
 }
-
 
 #endif //SRC_IMENURENDERER_H

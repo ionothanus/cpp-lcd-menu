@@ -11,11 +11,13 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
+#include <memory>
 #include "libevdev-1.0/libevdev/libevdev.h"
 
+#include "src/menuview/TextMenuView.h"
 #include "src/display/ssd1306/SSD1306MenuRenderer.h"
 
-textmenu::display::SSD1306MenuRenderer oled{};
+textmenu::TextMenuView oled{std::make_unique<textmenu::display::SSD1306MenuRenderer>()};
 textmenu::MenuList default_list{textmenu::MenuEntry{"Hello, not cruel world! I am so thrilled to be here today!", textmenu::MenuList{}},
                                 textmenu::MenuEntry{"Goodbye, sort of cruel world!", textmenu::MenuList{}},
                                 textmenu::MenuEntry{"Goodbye, crueller world!", textmenu::MenuList{}},

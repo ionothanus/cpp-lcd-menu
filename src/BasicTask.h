@@ -14,8 +14,8 @@ namespace textmenu
     public:
         BasicTask();
         ~BasicTask() override = default;
-        void Run() override;
-        void Stop() override;
+        void Run() final override;
+        void Stop() final override;
 
     protected:
         std::thread m_thread;
