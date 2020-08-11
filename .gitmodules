@@ -1,3 +1,6 @@
 [submodule "thirdparty/libSSD1306"]
 	path = thirdparty/libSSD1306
 	url = git@github.com:AndrewFromMelbourne/libSSD1306.git
+[submodule "thirdparty/CharLCD"]
+	path = thirdparty/CharLCD
+	url = git@github.com:dehavenm/CharLCD.git
