@@ -1,0 +1,132 @@
+#include <algorithm>
+
+#include "Adafruit16x2MenuRenderer.h"
+
+namespace textmenu
+{
+    namespace display
+    {
+        const uint8_t DOWN_ARROW_INDEX{ 1 };
+        const uint8_t UP_ARROW_INDEX{ 2 };
+
+        //should be const but library requires non-const
+        uint8_t DOWN_ARROW[] {
+            0b00000000,
+            0b00000100,
+            0b00000100,
+            0b00000100,
+            0b00011111,
+            0b00001110,
+            0b00000100,
+            0b00000000
+        };
+
+        uint8_t UP_ARROW[] {
+            0b00000000,
+            0b00000100,
+            0b00001110,
+            0b00011111,
+            0b00000100,
+            0b00000100,
+            0b00000100,
+            0b00000000
+        };
+
+        Adafruit16x2MenuRenderer::Adafruit16x2MenuRenderer()
+            : m_lcd{1, 0x20}
+        {
+            m_lcd.start(MAX_LINE_LENGTH, MAX_ROWS);
+            m_lcd.createChar(DOWN_ARROW_INDEX, DOWN_ARROW);
+            m_lcd.createChar(UP_ARROW_INDEX, UP_ARROW);
+            m_lcd.noBlink();
+            m_lcd.noCursor();
+        }
+
+        Adafruit16x2MenuRenderer::~Adafruit16x2MenuRenderer()
+        {
+            Sleep();
+        }
+
+        /// Public API
+
+        void Adafruit16x2MenuRenderer::Sleep()
+        {
+            m_lcd.noDisplay();
+            m_lcd.setBacklight(0);
+            m_screen_state = ScreenState::Off;
+        }
+
+        void Adafruit16x2MenuRenderer::Wake()
+        {
+            m_lcd.display();
+            m_lcd.setBacklight(255);
+            m_screen_state = ScreenState::On;
+        }
+
+        int Adafruit16x2MenuRenderer::GetMaxRows()
+        {
+            return MAX_ROWS;
+        }
+
+        int Adafruit16x2MenuRenderer::GetMaxLineLength()
+        {
+            return MAX_LINE_LENGTH;
+        }
+
+        ScreenState Adafruit16x2MenuRenderer::GetScreenState()
+        {
+            return m_screen_state;
+        }
+
+        void Adafruit16x2MenuRenderer::DrawMenuList(const MenuList& menu, int list_start_index, int selected_index, int selected_line_start_index)
+        {
+            int rowCount{ 0 };
+
+            m_lcd.home();
+
+            std::string blank_line = std::string(MAX_LINE_LENGTH, ' ');
+
+            for (int i = list_start_index; i < menu.size(); i++)
+            {
+                std::string line{blank_line};
+                MenuEntry entry = menu[i];
+                std::string string_to_render{ entry.displayValue };
+
+                //scrolling
+                if (i == selected_index)
+                {
+                    //buffer.setFrom(menu_selected, SSD1306::OledPoint{0, rowCount * SSD1306::sc_fontHeight8x16});
+                    string_to_render = "*" + string_to_render.substr(selected_line_start_index, string_to_render.length() - selected_line_start_index);
+                }
+
+                if (rowCount == 0 && list_start_index > 0)
+                {
+                    //draw up arrow
+                    string_to_render[MAX_LINE_LENGTH - 1] = UP_ARROW_INDEX;
+                }
+                else if (rowCount == (MAX_ROWS - 1) && (menu.size() - list_start_index - MAX_ROWS) > 0)
+                {
+                    //draw down arrow
+                    string_to_render[MAX_LINE_LENGTH - 1] = DOWN_ARROW_INDEX;
+                }
+                
+                m_lcd.setCursor(0, rowCount);
+
+                m_lcd.print(string_to_render.substr(0, MAX_LINE_LENGTH));
+
+                rowCount++;
+
+                if (rowCount >= MAX_ROWS)
+                {
+                    break;
+                }
+            }
+
+            while (rowCount < MAX_ROWS)
+            {
+                m_lcd.print(blank_line);
+                rowCount++;
+            }
+        }
+    }
+}

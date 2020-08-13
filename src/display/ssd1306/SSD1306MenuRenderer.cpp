@@ -120,10 +120,12 @@ namespace textmenu
 
                 if (rowCount == 0 && list_start_index != 0)
                 {
+                    // draw up arrow
                     buffer.setFrom(UP_ARROW, SSD1306::OledPoint{SSD1306::OledI2C::Width - SSD1306::sc_fontWidth8x16, 0});
                 }
-                else if (rowCount == (MAX_ROWS - 1) && list_start_index == 0)
+                else if (rowCount == (MAX_ROWS - 1) && (menu.size() - list_start_index - MAX_ROWS) > 0)
                 {
+                    // draw down arrow
                     buffer.setFrom(DOWN_ARROW, SSD1306::OledPoint{SSD1306::OledI2C::Width - SSD1306::sc_fontWidth8x16, 
                                                                   rowCount * SSD1306::sc_fontHeight8x16});
                     break;
