@@ -18,7 +18,7 @@
 #include "src/display/ssd1306/SSD1306MenuRenderer.h"
 #include "src/display/adafruit-16x2-buttons/Adafruit16x2MenuRenderer.h"
 
-textmenu::TextMenuView oled{std::make_unique<textmenu::display::SSD1306MenuRenderer>()};
+textmenu::TextMenuView oled{std::make_unique<textmenu::display::SSD1306MenuRenderer>(4, 1, 0x3D)};
 //textmenu::TextMenuView oled{std::make_unique<textmenu::display::Adafruit16x2MenuRenderer>()};
 textmenu::MenuList default_list{textmenu::MenuEntry{"Hello, not cruel world! I am so thrilled to be here today!", textmenu::MenuList{}},
                                 textmenu::MenuEntry{"Goodbye, sort of cruel world!", textmenu::MenuList{}},

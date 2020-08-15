@@ -1,4 +1,7 @@
 #include <algorithm>
+#include <thread>
+#include <fstream>
+#include <sstream>
 
 #include "libSSD1306/lib/OledGraphics.h"
 #include "SSD1306MenuRenderer.h"
@@ -45,35 +48,77 @@ namespace textmenu
             0b00000000
         };
 
-        SSD1306MenuRenderer::SSD1306MenuRenderer()
-            :
-
-              m_oled{"/dev/i2c-1", 0x3D},
-
-              m_screen_state{ScreenState::On}
+        void ResetDisplayGPIO(int gpio)
         {
-            m_oled.clear();
-            m_oled.displayUpdate();
+            std::ostringstream gpio_file_sstream{};
+            gpio_file_sstream << "/sys/class/gpio/gpio" << gpio << "/value";
+
+            std::ostringstream gpio_direction_sstream{};
+            gpio_direction_sstream << "/sys/class/gpio/gpio" << gpio << "/direction";
+
+            {
+                std::string direction_path{ gpio_direction_sstream.str() };
+                std::ofstream gpio_direction{direction_path};
+
+                if (!gpio_direction)
+                {
+                    throw std::runtime_error("Couldn't open file to set GPIO direction");
+                }
+
+                gpio_direction << "out";
+            }
+
+            {
+                std::string file_path{ gpio_file_sstream.str() };
+                std::ofstream gpio_file{ file_path};
+
+                if (!gpio_file)
+                {
+                    throw std::runtime_error("Couldn't open file to set GPIO value");
+                }
+
+                gpio_file << "0";
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                gpio_file << "1";
+            }
+
+        }
+
+        std::unique_ptr<SSD1306::OledI2C> SSD1306MenuRenderer::CreateOledI2C(int i2c_bus, uint8_t address)
+        {
+            std::ostringstream i2c_dev_path{};
+
+            i2c_dev_path << "/dev/i2c-" << i2c_bus;
+            return std::make_unique<SSD1306::OledI2C>(i2c_dev_path.str(), address);
+        }
+
+        SSD1306MenuRenderer::SSD1306MenuRenderer(const int reset_gpio, const int i2c_bus, const uint8_t address)
+            : m_screen_state{ScreenState::On}
+        {
+            ResetDisplayGPIO(reset_gpio);
+            m_oled = std::move(CreateOledI2C(i2c_bus, address));
+            m_oled->clear();
+            m_oled->displayUpdate();
         }
 
         SSD1306MenuRenderer::~SSD1306MenuRenderer()
         {
-            m_oled.displayOff();
-            m_oled.clear();
-            m_oled.displayUpdate();
+            m_oled->displayOff();
+            m_oled->clear();
+            m_oled->displayUpdate();
         }
 
         /// Public API
 
         void SSD1306MenuRenderer::Sleep()
         {
-            m_oled.displayOff();
+            m_oled->displayOff();
             m_screen_state = ScreenState::Off;
         }
 
         void SSD1306MenuRenderer::Wake()
         {
-            m_oled.displayOn();
+            m_oled->displayOn();
             m_screen_state = ScreenState::On;
         }
 
@@ -134,9 +179,9 @@ namespace textmenu
                 rowCount++;
             }
 
-            m_oled.setFrom(buffer);
+            m_oled->setFrom(buffer);
 
-            m_oled.displayUpdate();
+            m_oled->displayUpdate();
         }
     }
 }
