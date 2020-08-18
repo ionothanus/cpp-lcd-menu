@@ -1,22 +1,13 @@
 // Copyright © 2020 Jonathan Moscardini. All rights reserved.
 
 #include <iostream>
-#include <sys/types.h>
-#include <cstdio>
-#include <string.h>
-#include <sys/stat.h>
-#include <linux/input.h>
+#include <string>
 #include <signal.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <assert.h>
-#include <memory>
-#include "libevdev-1.0/libevdev/libevdev.h"
 
 #include "src/menuview/TextMenuView.h"
 #include "src/display/ssd1306/SSD1306MenuRenderer.h"
 #include "src/display/adafruit-16x2-buttons/Adafruit16x2MenuRenderer.h"
+#include "src/input/EvdevRotaryController.h"
 
 textmenu::TextMenuView oled{std::make_unique<textmenu::display::SSD1306MenuRenderer>(4, 1, 0x3D)};
 //textmenu::TextMenuView oled{std::make_unique<textmenu::display::Adafruit16x2MenuRenderer>()};
@@ -37,85 +28,39 @@ void signal_handler(int signum)
 const int MIN_INDEX = 0;
 const int MAX_INDEX = 3;
 
+const std::string ROTARY_DEV_PATH{"/dev/input/event1"};
+const std::string BUTTON_DEV_PATH{"/dev/input/event0"};
+
 int main()
 {
+    std::cout << "text-menu demo 2" << std::endl;
+
     oled.Run();
-
-    std::cout << "Hello worlds!" << std::endl;
-
-    bool displayToggle = true;
-
-    signal(SIGTERM, signal_handler);
-    signal(SIGINT, signal_handler);
+    textmenu::input::EvdevRotaryController rotary_controller{ROTARY_DEV_PATH, BUTTON_DEV_PATH};
 
     oled.UpdateEntries(default_list);
 
-    struct libevdev *dev_rotate = NULL, *dev_click = NULL;
-    int fd_rotate, fd_click;
-    int rc = 1;
-    
-    fd_rotate = open("/dev/input/event1", O_RDONLY|O_NONBLOCK);
-    rc = libevdev_new_from_fd(fd_rotate, &dev_rotate);
-    if (rc < 0) {
-            fprintf(stderr, "Failed to init libevdev (%s)\n", strerror(-rc));
-            exit(1);
+    bool exit_requested{ false };
+
+    rotary_controller.RegisterPushButtonHandler([&](bool selected){
+        if (selected && oled.GetCurrentIndex() == 3)
+        {
+            exit_requested = true;
+        }
+    });
+
+    rotary_controller.RegisterRelativeRotationHandler([&](int rel_offset){
+        oled.RequestIndexChange(rel_offset);
+    });
+
+    rotary_controller.Run();
+
+    while (!exit_requested)
+    {
+        usleep(500);
     }
 
-    fd_click = open("/dev/input/event0", O_RDONLY|O_NONBLOCK);
-    rc = libevdev_new_from_fd(fd_click, &dev_click);
-    if (rc < 0) {
-            fprintf(stderr, "Failed to init libevdev (%s)\n", strerror(-rc));
-            exit(1);
-    }
-
-    printf("Input device name: \"%s\"\n", libevdev_get_name(dev_rotate));
-    printf("Input device ID: bus %#x vendor %#x product %#x\n",
-        libevdev_get_id_bustype(dev_rotate),
-        libevdev_get_id_vendor(dev_rotate),
-        libevdev_get_id_product(dev_rotate));
-    printf("Input device name: \"%s\"\n", libevdev_get_name(dev_click));
-    printf("Input device ID: bus %#x vendor %#x product %#x\n",
-        libevdev_get_id_bustype(dev_click),
-        libevdev_get_id_vendor(dev_click),
-        libevdev_get_id_product(dev_click));
-    
-    do {
-        struct input_event ev_rotate, ev_click;
-        rc = libevdev_next_event(dev_rotate, LIBEVDEV_READ_FLAG_NORMAL, &ev_rotate);
-        if (rc == 0)
-        {
-            printf("Event: %s %s %d\n",
-                libevdev_event_type_get_name(ev_rotate.type),
-                libevdev_event_code_get_name(ev_rotate.type, ev_rotate.code),
-                ev_rotate.value);
-            
-            if (ev_rotate.type == EV_REL)
-            {
-                oled.RequestIndexChange(ev_rotate.value);
-            }
-        }
-
-        rc = libevdev_next_event(dev_click, LIBEVDEV_READ_FLAG_NORMAL, &ev_click);
-        if (rc == 0)
-        {
-            std::string event_code_name{ libevdev_event_code_get_name(ev_click.type, ev_click.code) };
-
-
-            printf("Event: %s %s %d\n",
-                    libevdev_event_type_get_name(ev_click.type),
-                    event_code_name.c_str(),
-                    ev_click.value);
-
-            if (event_code_name == "KEY_ENTER" && ev_click.value == 0)
-            {
-                if (oled.GetCurrentIndex() == 3)
-                {
-                    oled.Stop();
-                    exit(0);
-                }
-            }
-        }
-
-        usleep(100);
-    } while (rc == 1 || rc == 0 || rc == -EAGAIN);
+    oled.Stop();
+    rotary_controller.Stop();
+    exit(0);
 }
