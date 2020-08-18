@@ -160,79 +160,82 @@ namespace textmenu
 
     bool TextMenuView::ScrollSelectedLine(const MenuList& list)
     {
-        // these two conditions will account for the one-character arrows drawn
-        // at the end of the first or last rows, if there are off-screen entries
-        // above or below the current window
-        bool selectedFirstRenderedLine{ (list.size() > m_menu_renderer->GetMaxRows() 
-                                        && (m_selected_index - m_display_start_index) == 0
-                                        && m_display_start_index != 0) };
-        bool selectedLastRenderedLine{ (list.size() > m_menu_renderer->GetMaxRows() 
-                                        && (m_selected_index - m_display_start_index == m_menu_renderer->GetMaxRows() - 1)
-                                        && m_display_start_index < (list.size() - m_menu_renderer->GetMaxRows())) };
-
-        int maxWidth =  (selectedFirstRenderedLine || selectedLastRenderedLine)
-                        ? m_menu_renderer->GetMaxRows() - 1
-                        : m_menu_renderer->GetMaxRows();
-        int lineLength = list[m_selected_index].displayValue.length();
-
-        if (lineLength > maxWidth)
+        if (list.size() > 0)
         {
-            if (m_scroll_direction == ScrollDirection::None)
-            {
-                m_scroll_hold_counter++;
+            // these two conditions will account for the one-character arrows drawn
+            // at the end of the first or last rows, if there are off-screen entries
+            // above or below the current window
+            bool selectedFirstRenderedLine{ (list.size() > m_menu_renderer->GetMaxRows() 
+                                            && (m_selected_index - m_display_start_index) == 0
+                                            && m_display_start_index != 0) };
+            bool selectedLastRenderedLine{ (list.size() > m_menu_renderer->GetMaxRows() 
+                                            && (m_selected_index - m_display_start_index == m_menu_renderer->GetMaxRows() - 1)
+                                            && m_display_start_index < (list.size() - m_menu_renderer->GetMaxRows())) };
 
-                if (m_scroll_hold_counter > MAX_SCROLL_HOLD)
+            int maxWidth =  (selectedFirstRenderedLine || selectedLastRenderedLine)
+                            ? m_menu_renderer->GetMaxRows() - 1
+                            : m_menu_renderer->GetMaxRows();
+            int lineLength = list[m_selected_index].displayValue.length();
+
+            if (lineLength > maxWidth)
+            {
+                if (m_scroll_direction == ScrollDirection::None)
                 {
-                    m_scroll_hold_counter = 0;
-                    m_scroll_direction = ScrollDirection::Forward;
+                    m_scroll_hold_counter++;
+
+                    if (m_scroll_hold_counter > MAX_SCROLL_HOLD)
+                    {
+                        m_scroll_hold_counter = 0;
+                        m_scroll_direction = ScrollDirection::Forward;
+                    }
                 }
-            }
-            else if (m_scroll_direction == ScrollDirection::Forward)
-            {
-                m_selected_line_start_index = std::clamp(++m_selected_line_start_index,
-                                                            0,
-                                                            lineLength - maxWidth);
-
-                if (m_selected_line_start_index == lineLength - maxWidth)
+                else if (m_scroll_direction == ScrollDirection::Forward)
                 {
-                    m_scroll_direction = ScrollDirection::Hold;
+                    m_selected_line_start_index = std::clamp(++m_selected_line_start_index,
+                                                                0,
+                                                                lineLength - maxWidth);
+
+                    if (m_selected_line_start_index == lineLength - maxWidth)
+                    {
+                        m_scroll_direction = ScrollDirection::Hold;
+                    }
+
+                    return true;
                 }
-
-                return true;
-            }
-            else if (m_scroll_direction == ScrollDirection::Reverse)
-            {
-                m_selected_line_start_index = std::clamp(--m_selected_line_start_index,
-                                                            0,
-                                                            lineLength - maxWidth);
-
-                if (m_selected_line_start_index == 0)
+                else if (m_scroll_direction == ScrollDirection::Reverse)
                 {
-                    m_scroll_direction = ScrollDirection::Hold;
-                }
-
-                return true;
-            }
-            else if (m_scroll_direction == ScrollDirection::Hold)
-            {
-                m_scroll_hold_counter++;
-
-                if (m_scroll_hold_counter > MAX_SCROLL_HOLD)
-                {
-                    m_scroll_hold_counter = 0;
+                    m_selected_line_start_index = std::clamp(--m_selected_line_start_index,
+                                                                0,
+                                                                lineLength - maxWidth);
 
                     if (m_selected_line_start_index == 0)
                     {
-                        m_scroll_direction = ScrollDirection::Forward;
-                        m_full_scroll_completed = true;
+                        m_scroll_direction = ScrollDirection::Hold;
                     }
-                    else
-                    {
-                        m_scroll_direction = ScrollDirection::Reverse;
-                    }
-                }
 
-                return false;
+                    return true;
+                }
+                else if (m_scroll_direction == ScrollDirection::Hold)
+                {
+                    m_scroll_hold_counter++;
+
+                    if (m_scroll_hold_counter > MAX_SCROLL_HOLD)
+                    {
+                        m_scroll_hold_counter = 0;
+
+                        if (m_selected_line_start_index == 0)
+                        {
+                            m_scroll_direction = ScrollDirection::Forward;
+                            m_full_scroll_completed = true;
+                        }
+                        else
+                        {
+                            m_scroll_direction = ScrollDirection::Reverse;
+                        }
+                    }
+
+                    return false;
+                }
             }
         }
 
