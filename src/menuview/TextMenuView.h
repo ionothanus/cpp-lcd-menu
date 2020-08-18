@@ -2,6 +2,7 @@
 #define SRC_DISPLAY_TEXTMENURENDERER_H
 
 #include <memory>
+#include <shared_mutex>
 
 #include "menuview/IMenuView.h"
 #include "BasicTask.h"
@@ -21,15 +22,21 @@ namespace textmenu
 
     private:    
         void ThreadFunction() override;
-        bool ScrollSelectedLine();
+        void UpdateIndex(int this_requested_index_change);
+        void ResetScrollState();
+        bool ScrollSelectedLine(const MenuList& list);
 
         std::unique_ptr<display::IMenuRenderer> m_menu_renderer;
 
+        // input variables from consumers - must be thread-safe
         MenuList m_local_list;
-
         std::atomic<bool> m_update_required;
+        std::atomic<int> m_requested_index_change;
 
+        // output variables for consumers - must be thread-safe
         std::atomic<int> m_selected_index;
+
+        // internal display state variables
         int m_display_start_index;
         int m_selected_line_start_index;
         int m_scroll_hold_counter;

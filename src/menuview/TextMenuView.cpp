@@ -11,6 +11,7 @@ namespace textmenu
         : m_menu_renderer{std::move(menu_renderer)},
           m_local_list{},
           m_update_required{false},
+          m_requested_index_change{0},
           m_selected_index{0},
           m_display_start_index{0},
           m_selected_line_start_index{0},
@@ -35,27 +36,7 @@ namespace textmenu
     {
         {
             std::lock_guard<std::mutex> lock {m_cv_mutex};
-
-            if (m_menu_renderer->GetScreenState() == display::ScreenState::On)
-            {
-                m_selected_index = std::clamp(m_selected_index += rel_offset,
-                    MIN_LIST_INDEX,
-                    static_cast<int>(m_local_list.size() - 1));
-
-                if (rel_offset > 0 && m_selected_index - m_display_start_index > (m_menu_renderer->GetMaxRows() - 1))
-                {
-                    m_display_start_index = std::clamp(++m_display_start_index,
-                        0,
-                        static_cast<int>(m_local_list.size() - m_menu_renderer->GetMaxRows()));
-                }
-                else if (rel_offset < 0 && m_selected_index < m_display_start_index)
-                {
-                    m_display_start_index = std::clamp(--m_display_start_index,
-                        0,
-                        static_cast<int>(m_local_list.size() - m_menu_renderer->GetMaxRows()));
-                }
-            }
-
+            m_requested_index_change = rel_offset;
             m_update_required = true;
         }
 
@@ -71,47 +52,55 @@ namespace textmenu
 
     void TextMenuView::ThreadFunction()
     {
+        MenuList this_list;
+        bool this_update_required;
+        bool this_terminate;
+        int this_requested_index_change;
+
         while (!m_terminate)
         {
-            std::unique_lock<std::mutex> lock{m_cv_mutex};
-            m_thread_cv.wait_for(lock,
-                                std::chrono::milliseconds(SCROLL_DELAY_MS),
-                                [this] () { return ((m_terminate == true) ||
-                                                    (m_update_required == true)); });
+            {
+                std::unique_lock<std::mutex> lock{m_cv_mutex};
+                m_thread_cv.wait_for(lock,
+                                    std::chrono::milliseconds(SCROLL_DELAY_MS),
+                                    [this] () { return ((m_terminate == true) ||
+                                                        (m_update_required == true)); });
+
+                // make local copies so we can release the lock
+                this_list = m_local_list;
+                this_update_required = m_update_required;
+                this_terminate = m_terminate;
+                this_requested_index_change = m_requested_index_change;
+
+                m_update_required = false;
+                m_requested_index_change = 0;
+            }
             
-            if (m_terminate)
+            if (this_terminate)
             {
                 break;
             }
 
-            if (m_update_required)
+            UpdateIndex(this_requested_index_change);
+
+            bool draw = false;
+
+            if (this_update_required)
             {
+                draw = true;
+
                 if (m_menu_renderer->GetScreenState() == display::ScreenState::Off)
                 {
                     m_menu_renderer->Wake();
                 }
 
-                m_scroll_direction = ScrollDirection::None;
-                m_scroll_hold_counter = 0;
-                m_selected_line_start_index = 0;
-                m_full_scroll_completed = false;
-                m_sleep_counter = 0;
-
-                m_menu_renderer->DrawMenuList(m_local_list,
-                                             m_display_start_index,
-                                             m_selected_index,
-                                             m_selected_line_start_index);
-
-                m_update_required = false;
+                ResetScrollState();
             }
             else if (m_menu_renderer->GetScreenState() == display::ScreenState::On)
             {
-                if (ScrollSelectedLine())
+                if (ScrollSelectedLine(this_list))
                 {
-                    m_menu_renderer->DrawMenuList(m_local_list,
-                                                 m_display_start_index,
-                                                 m_selected_index,
-                                                 m_selected_line_start_index);
+                    draw = true;
                 }
 
                 if (m_full_scroll_completed)
@@ -126,25 +115,65 @@ namespace textmenu
                     }
                 }
             }
+
+            if (draw)
+            {
+                m_menu_renderer->DrawMenuList(this_list,
+                                              m_display_start_index,
+                                              m_selected_index,
+                                              m_selected_line_start_index);
+            }
         }
     }
 
-    bool TextMenuView::ScrollSelectedLine()
+    void TextMenuView::UpdateIndex(int this_requested_index_change)
+    {
+        if (m_menu_renderer->GetScreenState() == display::ScreenState::On)
+        {
+            m_selected_index = std::clamp(m_selected_index += this_requested_index_change,
+                                            MIN_LIST_INDEX,
+                                            static_cast<int>(m_local_list.size() - 1));
+
+            if (this_requested_index_change > 0 && m_selected_index - m_display_start_index > (m_menu_renderer->GetMaxRows() - 1))
+            {
+                m_display_start_index = std::clamp(++m_display_start_index,
+                                                    0,
+                                                    static_cast<int>(m_local_list.size() - m_menu_renderer->GetMaxRows()));
+            }
+            else if (this_requested_index_change < 0 && m_selected_index < m_display_start_index)
+            {
+                m_display_start_index = std::clamp(--m_display_start_index,
+                                                    0,
+                                                    static_cast<int>(m_local_list.size() - m_menu_renderer->GetMaxRows()));
+            }
+        }
+    }
+
+    void TextMenuView::ResetScrollState()
+    {
+        m_scroll_direction = ScrollDirection::None;
+        m_scroll_hold_counter = 0;
+        m_selected_line_start_index = 0;
+        m_full_scroll_completed = false;
+        m_sleep_counter = 0;
+    }
+
+    bool TextMenuView::ScrollSelectedLine(const MenuList& list)
     {
         // these two conditions will account for the one-character arrows drawn
         // at the end of the first or last rows, if there are off-screen entries
         // above or below the current window
-        bool selectedFirstRenderedLine{ (m_local_list.size() > m_menu_renderer->GetMaxRows() 
+        bool selectedFirstRenderedLine{ (list.size() > m_menu_renderer->GetMaxRows() 
                                         && (m_selected_index - m_display_start_index) == 0
                                         && m_display_start_index != 0) };
-        bool selectedLastRenderedLine{ (m_local_list.size() > m_menu_renderer->GetMaxRows() 
+        bool selectedLastRenderedLine{ (list.size() > m_menu_renderer->GetMaxRows() 
                                         && (m_selected_index - m_display_start_index == m_menu_renderer->GetMaxRows() - 1)
-                                        && m_display_start_index < (m_local_list.size() - m_menu_renderer->GetMaxRows())) };
+                                        && m_display_start_index < (list.size() - m_menu_renderer->GetMaxRows())) };
 
         int maxWidth =  (selectedFirstRenderedLine || selectedLastRenderedLine)
                         ? m_menu_renderer->GetMaxRows() - 1
                         : m_menu_renderer->GetMaxRows();
-        int lineLength = m_local_list[m_selected_index].displayValue.length();
+        int lineLength = list[m_selected_index].displayValue.length();
 
         if (lineLength > maxWidth)
         {
@@ -209,5 +238,4 @@ namespace textmenu
 
         return false;
     }
-
 }
