@@ -2,15 +2,20 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 #include <signal.h>
 
 #include "src/menuview/TextMenuView.h"
 #include "src/display/ssd1306/SSD1306MenuRenderer.h"
 #include "src/display/adafruit-16x2-buttons/Adafruit16x2MenuRenderer.h"
-#include "src/input/EvdevRotaryController.h"
+#include "src/input/adafruit-16x2-buttons/Adafruit16x2ButtonController.h"
+#include "src/input/evdev/EvdevRotaryController.h"
+#include "src/driver/Adafruit16x2DeviceWrapper.h"
 
-textmenu::TextMenuView oled{std::make_unique<textmenu::display::SSD1306MenuRenderer>(4, 1, 0x3D)};
-//textmenu::TextMenuView oled{std::make_unique<textmenu::display::Adafruit16x2MenuRenderer>()};
+//textmenu::TextMenuView oled{std::make_unique<textmenu::display::SSD1306MenuRenderer>(4, 1, 0x3D)};
+std::shared_ptr<textmenu::driver::Adafruit16x2DeviceWrapper> wrapper{std::make_shared<textmenu::driver::Adafruit16x2DeviceWrapper>(1, 0x20)};
+
+textmenu::TextMenuView oled{std::make_unique<textmenu::display::Adafruit16x2MenuRenderer>(wrapper)};
 textmenu::MenuList default_list{textmenu::MenuEntry{"Hello, not cruel world! I am so thrilled to be here today!", textmenu::MenuList{}},
                                 textmenu::MenuEntry{"Goodbye, sort of cruel world!", textmenu::MenuList{}},
                                 textmenu::MenuEntry{"Goodbye, crueller world!", textmenu::MenuList{}},
@@ -36,24 +41,31 @@ int main()
     std::cout << "text-menu demo 2" << std::endl;
 
     oled.Run();
-    textmenu::input::EvdevRotaryController rotary_controller{ROTARY_DEV_PATH, BUTTON_DEV_PATH};
 
+    // std::shared_ptr<textmenu::input::EvdevRotaryController> evdev_rotary_controller{ std::make_shared<textmenu::input::EvdevRotaryController>(ROTARY_DEV_PATH, BUTTON_DEV_PATH) };
+    // std::shared_ptr<textmenu::input::IMenuInputController> controller{ evdev_rotary_controller };
+    // std::shared_ptr<textmenu::ITask> controller_task{ evdev_rotary_controller };
+
+    std::shared_ptr<textmenu::input::Adafruit16x2ButtonController> adafruit_button_controller{ std::make_shared<textmenu::input::Adafruit16x2ButtonController>(wrapper) };
+    std::shared_ptr<textmenu::input::IMenuInputController> controller{ adafruit_button_controller };
+    std::shared_ptr<textmenu::ITask> controller_task{ adafruit_button_controller };
+    
     oled.UpdateEntries(default_list);
 
     bool exit_requested{ false };
 
-    rotary_controller.RegisterPushButtonHandler([&](bool selected){
+    controller->RegisterSelectButtonHandler([&](bool selected){
         if (selected && oled.GetCurrentIndex() == 3)
         {
             exit_requested = true;
         }
     });
 
-    rotary_controller.RegisterRelativeRotationHandler([&](int rel_offset){
+    controller->RegisterRelativeVerticalHandler([&](int rel_offset){
         oled.RequestIndexChange(rel_offset);
     });
 
-    rotary_controller.Run();
+    controller_task->Run();
 
     while (!exit_requested)
     {
@@ -61,6 +73,6 @@ int main()
     }
 
     oled.Stop();
-    rotary_controller.Stop();
+    controller_task->Stop();
     exit(0);
 }

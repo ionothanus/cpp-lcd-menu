@@ -1,9 +1,10 @@
 #ifndef SRC_DISPLAY_ADAFRUIT16X2MENURENDERER_H
 #define SRC_DISPLAY_ADAFRUIT16X2MENURENDERER_H
 
-#include "CharLCD/src/CharLCD.h"
+#include <memory>
 
 #include "display/IMenuRenderer.h"
+#include "driver/Adafruit16x2DeviceWrapper.h"
 
 namespace textmenu
 {
@@ -12,7 +13,7 @@ namespace textmenu
         class Adafruit16x2MenuRenderer : public IMenuRenderer
         {
         public:
-            Adafruit16x2MenuRenderer();
+            Adafruit16x2MenuRenderer(std::shared_ptr<driver::Adafruit16x2DeviceWrapper>& lcd);
             ~Adafruit16x2MenuRenderer();
 
             void DrawMenuList(const MenuList& menu, 
@@ -26,12 +27,12 @@ namespace textmenu
             ScreenState GetScreenState() override;
 
         private:
-            CharLCD m_lcd;
+            std::shared_ptr<driver::Adafruit16x2DeviceWrapper> m_lcd;
 
             ScreenState m_screen_state;
 
-            static constexpr int MAX_ROWS{ 2 };
-            static constexpr int MAX_LINE_LENGTH{ 16 };
+            static constexpr int MAX_LINE_LENGTH{ driver::Adafruit16x2DeviceWrapper::MAX_LINE_LENGTH };
+            static constexpr int MAX_ROWS{ driver::Adafruit16x2DeviceWrapper::MAX_ROWS };
         };
     }
 }

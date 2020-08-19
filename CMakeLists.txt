@@ -30,8 +30,10 @@ add_library(text-menu-shared STATIC src/BasicTask.cpp)
 add_library(menuview STATIC src/menuview/TextMenuView.cpp)
 
 add_library(displaySSD1306 STATIC src/display/ssd1306/SSD1306MenuRenderer.cpp)
-add_library(displayAdafruit16x2 STATIC src/display/adafruit-16x2-buttons/Adafruit16x2MenuRenderer.cpp)
-add_library(inputEvdevRotaryController STATIC src/input/EvdevRotaryController.cpp)
+add_library(displayAdafruit16x2 STATIC src/display/adafruit-16x2-buttons/Adafruit16x2MenuRenderer.cpp
+                                       src/input/adafruit-16x2-buttons/Adafruit16x2ButtonController.cpp
+                                       src/driver/Adafruit16x2DeviceWrapper.cpp)
+add_library(inputEvdevRotaryController STATIC src/input/evdev/EvdevRotaryController.cpp)
 
 target_include_directories(text-menu PUBLIC .)
 target_include_directories(text-menu PUBLIC ./src)

@@ -9,7 +9,7 @@
 
 namespace textmenu
 {
-    class BasicTask : ITask
+    class BasicTask : public ITask
     {
     public:
         BasicTask();

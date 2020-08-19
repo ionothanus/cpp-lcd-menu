@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <exception>
 
-#include "input/EvdevRotaryController.h"
+#include "input/evdev/EvdevRotaryController.h"
 
 namespace textmenu
 {
@@ -57,12 +57,12 @@ namespace textmenu
             }
         }
 
-        void EvdevRotaryController::RegisterPushButtonHandler(PushButtonHandler handler)
+        void EvdevRotaryController::RegisterSelectButtonHandler(PushButtonHandler handler)
         {
             m_button_handler = handler;
         }
 
-        void EvdevRotaryController::RegisterRelativeRotationHandler(RelativeRotationHandler handler)
+        void EvdevRotaryController::RegisterRelativeVerticalHandler(RelativeVerticalHandler handler)
         {
             m_rotation_handler = handler;
         }

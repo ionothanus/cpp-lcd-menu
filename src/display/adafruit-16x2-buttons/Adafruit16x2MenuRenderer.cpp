@@ -32,14 +32,13 @@ namespace textmenu
             0b00000000
         };
 
-        Adafruit16x2MenuRenderer::Adafruit16x2MenuRenderer()
-            : m_lcd{1, 0x20}
+        Adafruit16x2MenuRenderer::Adafruit16x2MenuRenderer(std::shared_ptr<driver::Adafruit16x2DeviceWrapper>& lcd)
+            : m_lcd{lcd}
         {
-            m_lcd.start(MAX_LINE_LENGTH, MAX_ROWS);
-            m_lcd.createChar(DOWN_ARROW_INDEX, DOWN_ARROW);
-            m_lcd.createChar(UP_ARROW_INDEX, UP_ARROW);
-            m_lcd.noBlink();
-            m_lcd.noCursor();
+            m_lcd->GetLcdHandle()->createChar(DOWN_ARROW_INDEX, DOWN_ARROW);
+            m_lcd->GetLcdHandle()->createChar(UP_ARROW_INDEX, UP_ARROW);
+            m_lcd->GetLcdHandle()->noBlink();
+            m_lcd->GetLcdHandle()->noCursor();
         }
 
         Adafruit16x2MenuRenderer::~Adafruit16x2MenuRenderer()
@@ -51,15 +50,15 @@ namespace textmenu
 
         void Adafruit16x2MenuRenderer::Sleep()
         {
-            m_lcd.noDisplay();
-            m_lcd.setBacklight(0);
+            m_lcd->GetLcdHandle()->noDisplay();
+            m_lcd->GetLcdHandle()->setBacklight(0);
             m_screen_state = ScreenState::Off;
         }
 
         void Adafruit16x2MenuRenderer::Wake()
         {
-            m_lcd.display();
-            m_lcd.setBacklight(255);
+            m_lcd->GetLcdHandle()->display();
+            m_lcd->GetLcdHandle()->setBacklight(255);
             m_screen_state = ScreenState::On;
         }
 
@@ -82,7 +81,7 @@ namespace textmenu
         {
             int rowCount{ 0 };
 
-            m_lcd.home();
+            m_lcd->GetLcdHandle()->home();
 
             std::string blank_line = std::string(MAX_LINE_LENGTH, ' ');
 
@@ -110,9 +109,9 @@ namespace textmenu
                     string_to_render[MAX_LINE_LENGTH - 1] = DOWN_ARROW_INDEX;
                 }
                 
-                m_lcd.setCursor(0, rowCount);
+                m_lcd->GetLcdHandle()->setCursor(0, rowCount);
 
-                m_lcd.print(string_to_render.substr(0, MAX_LINE_LENGTH));
+                m_lcd->GetLcdHandle()->print(string_to_render.substr(0, MAX_LINE_LENGTH));
 
                 rowCount++;
 
@@ -124,7 +123,7 @@ namespace textmenu
 
             while (rowCount < MAX_ROWS)
             {
-                m_lcd.print(blank_line);
+                m_lcd->GetLcdHandle()->print(blank_line);
                 rowCount++;
             }
         }
