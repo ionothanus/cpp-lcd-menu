@@ -18,7 +18,7 @@ namespace textmenu
         {
         public:
             SSD1306MenuRenderer(const int reset_gpio, const int i2c_bus, const uint8_t address);
-            ~SSD1306MenuRenderer();
+            ~SSD1306MenuRenderer() override;
 
             void DrawMenuList(const MenuList& menu, 
                               int list_start_index,
