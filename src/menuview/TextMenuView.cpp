@@ -18,7 +18,7 @@ namespace textmenu
           m_scroll_hold_counter{0},
           m_full_scroll_completed{false},
           m_scroll_direction{ScrollDirection::None},
-          m_sleep_counter{0}
+          m_last_input_time{clock::now()}
     {}
 
     void TextMenuView::UpdateEntries(const MenuList& entries)
@@ -105,13 +105,9 @@ namespace textmenu
 
                 if (m_full_scroll_completed)
                 {
-                    if (m_sleep_counter > MAX_SLEEP_COUNT)
+                    if (clock::now() - m_last_input_time > MIN_SCREEN_ON_TIME)
                     {
                         m_menu_renderer->Sleep();
-                    }
-                    else
-                    {
-                        m_sleep_counter++;
                     }
                 }
             }
@@ -155,7 +151,7 @@ namespace textmenu
         m_scroll_hold_counter = 0;
         m_selected_line_start_index = 0;
         m_full_scroll_completed = false;
-        m_sleep_counter = 0;
+        m_last_input_time = clock::now();
     }
 
     bool TextMenuView::ScrollSelectedLine(const MenuList& list)
@@ -173,8 +169,14 @@ namespace textmenu
                                             && m_display_start_index < (list.size() - m_menu_renderer->GetMaxRows())) };
 
             int maxWidth =  (selectedFirstRenderedLine || selectedLastRenderedLine)
-                            ? m_menu_renderer->GetMaxRows() - 1
-                            : m_menu_renderer->GetMaxRows();
+                            ? m_menu_renderer->GetMaxLineLength() - 1
+                            : m_menu_renderer->GetMaxLineLength();
+
+            if (m_menu_renderer->SelectionIsCharacter())
+            {
+                maxWidth--;
+            }
+
             int lineLength = list[m_selected_index].displayValue.length();
 
             if (lineLength > maxWidth)
@@ -236,6 +238,10 @@ namespace textmenu
 
                     return false;
                 }
+            }
+            else
+            {
+                m_full_scroll_completed = true;
             }
         }
 

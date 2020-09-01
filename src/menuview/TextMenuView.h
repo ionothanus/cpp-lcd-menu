@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <shared_mutex>
+#include <chrono>
 
 #include "menuview/IMenuView.h"
 #include "BasicTask.h"
@@ -20,7 +21,9 @@ namespace textmenu
         void RequestIndexChange(int rel_offset) override;
         int GetCurrentIndex() override;
 
-    private:    
+    private:
+        using clock = std::chrono::system_clock;
+
         void ThreadFunction() override;
         void UpdateIndex(int this_requested_index_change);
         void ResetScrollState();
@@ -42,12 +45,12 @@ namespace textmenu
         int m_scroll_hold_counter;
         bool m_full_scroll_completed;
         ScrollDirection m_scroll_direction;
-        int m_sleep_counter;
+        clock::time_point m_last_input_time;
 
         static constexpr int MIN_LIST_INDEX{ 0 };
         static constexpr int SCROLL_DELAY_MS{ 250 };
         static constexpr int MAX_SCROLL_HOLD{ 4 };
-        static constexpr int MAX_SLEEP_COUNT{ 4 };
+        static constexpr clock::duration MIN_SCREEN_ON_TIME{ std::chrono::seconds(5) };
     };
 }
 

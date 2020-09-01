@@ -29,6 +29,10 @@ namespace textmenu
             int GetMaxRows() override;
             int GetMaxLineLength() override;
             ScreenState GetScreenState() override;
+            bool SelectionIsCharacter() override
+            {
+                return false;
+            }
 
         private:
             std::unique_ptr<SSD1306::OledI2C> m_oled;

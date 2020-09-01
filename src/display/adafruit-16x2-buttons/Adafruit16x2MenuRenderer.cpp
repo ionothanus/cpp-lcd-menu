@@ -33,7 +33,8 @@ namespace textmenu
         };
 
         Adafruit16x2MenuRenderer::Adafruit16x2MenuRenderer(std::shared_ptr<driver::Adafruit16x2DeviceWrapper>& lcd)
-            : m_lcd{lcd}
+            : m_lcd{lcd},
+              m_screen_state{ScreenState::On}
         {
             m_lcd->GetLcdHandle()->createChar(DOWN_ARROW_INDEX, DOWN_ARROW);
             m_lcd->GetLcdHandle()->createChar(UP_ARROW_INDEX, UP_ARROW);
@@ -89,7 +90,8 @@ namespace textmenu
             {
                 std::string line{blank_line};
                 MenuEntry entry = menu[i];
-                std::string string_to_render{ entry.displayValue };
+                size_t size_to_render{ std::clamp(entry.displayValue.size(), 0U, MAX_LINE_LENGTH) };
+                std::string string_to_render{ line.replace(0, size_to_render, entry.displayValue) };
 
                 //scrolling
                 if (i == selected_index)

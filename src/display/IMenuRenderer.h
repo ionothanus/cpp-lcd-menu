@@ -24,6 +24,7 @@ namespace textmenu
             virtual int GetMaxRows() = 0;
             virtual int GetMaxLineLength() = 0;
             virtual ScreenState GetScreenState() = 0;
+            virtual bool SelectionIsCharacter() = 0;
         };
     }
 }

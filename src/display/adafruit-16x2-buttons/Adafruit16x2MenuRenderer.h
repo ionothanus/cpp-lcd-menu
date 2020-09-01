@@ -25,14 +25,18 @@ namespace textmenu
             int GetMaxRows() override;
             int GetMaxLineLength() override;
             ScreenState GetScreenState() override;
+            bool SelectionIsCharacter() override
+            {
+                return true;
+            }
 
         private:
             std::shared_ptr<driver::Adafruit16x2DeviceWrapper> m_lcd;
 
             ScreenState m_screen_state;
 
-            static constexpr int MAX_LINE_LENGTH{ driver::Adafruit16x2DeviceWrapper::MAX_LINE_LENGTH };
-            static constexpr int MAX_ROWS{ driver::Adafruit16x2DeviceWrapper::MAX_ROWS };
+            static constexpr size_t MAX_LINE_LENGTH{ driver::Adafruit16x2DeviceWrapper::MAX_LINE_LENGTH };
+            static constexpr size_t MAX_ROWS{ driver::Adafruit16x2DeviceWrapper::MAX_ROWS };
         };
     }
 }
