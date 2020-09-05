@@ -78,7 +78,22 @@ namespace textmenu
             return m_screen_state;
         }
 
-        void Adafruit16x2MenuRenderer::DrawMenuList(const MenuList& menu, int list_start_index, int selected_index, int selected_line_start_index)
+        void Adafruit16x2MenuRenderer::DrawOverlay(const std::string& message)
+        {
+            m_lcd->GetLcdHandle()->home();
+
+            std::string blank_line = std::string(MAX_LINE_LENGTH, ' ');
+
+            std::string line{blank_line};
+            size_t size_to_render{ std::clamp(message.size(), 0U, MAX_LINE_LENGTH) };
+            std::string string_to_render{ line.replace(0, size_to_render, message) };
+
+            m_lcd->GetLcdHandle()->setCursor(0, 0);
+
+            m_lcd->GetLcdHandle()->print(string_to_render.substr(0, MAX_LINE_LENGTH));
+        }
+
+        void Adafruit16x2MenuRenderer::DrawMenuList(const MenuEntryList& menu, int list_start_index, int selected_index, int selected_line_start_index)
         {
             int rowCount{ 0 };
 

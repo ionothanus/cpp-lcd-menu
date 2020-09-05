@@ -11,13 +11,13 @@ namespace textmenu
 {
     struct MenuEntry;
 
-    using MenuList = std::vector<MenuEntry>;
+    using MenuEntryList = std::vector<MenuEntry>;
 
     struct MenuEntry
     {
         std::string displayValue;
-        //std::unique_ptr<IAction> action;
-        MenuList submenu;
+        std::string actionLabel;
+        MenuEntryList submenu;
     };
 }
 

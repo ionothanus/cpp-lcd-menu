@@ -18,7 +18,8 @@ namespace textmenu
         public:
             virtual ~IMenuRenderer() = default;
 
-            virtual void DrawMenuList(const MenuList& menu, int list_start_index, int selected_index, int selected_line_start_index) = 0;
+            virtual void DrawMenuList(const MenuEntryList& menu, int list_start_index, int selected_index, int selected_line_start_index) = 0;
+            virtual void DrawOverlay(const std::string& message) = 0;
             virtual void Sleep() = 0;
             virtual void Wake() = 0;
             virtual int GetMaxRows() = 0;

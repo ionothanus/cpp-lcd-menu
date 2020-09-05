@@ -12,6 +12,9 @@ namespace textmenu
           m_local_list{},
           m_update_required{false},
           m_requested_index_change{0},
+          m_overlay_requested{false},
+          m_overlay_message{""},
+          m_overlay_duration{},
           m_selected_index{0},
           m_display_start_index{0},
           m_selected_line_start_index{0},
@@ -21,11 +24,28 @@ namespace textmenu
           m_last_input_time{clock::now()}
     {}
 
-    void TextMenuView::UpdateEntries(const MenuList& entries)
+    void TextMenuView::LoadNewMenu(const MenuEntryList& entries)
     {
         {
             std::lock_guard<std::mutex> lock {m_cv_mutex};
             m_local_list = entries;
+            m_selected_index = 0;
+            m_display_start_index = 0;
+            ResetScrollState();
+            m_update_required = true;
+        }
+        
+        m_thread_cv.notify_one();
+    }
+
+    void TextMenuView::RequestTimedOverlay(const std::string& text,
+                                 std::chrono::system_clock::duration duration)
+    {
+        {
+            std::lock_guard<std::mutex> lock {m_cv_mutex};
+            m_overlay_message = text;
+            m_overlay_duration = duration;
+            m_overlay_requested = true;
             m_update_required = true;
         }
         
@@ -52,10 +72,14 @@ namespace textmenu
 
     void TextMenuView::ThreadFunction()
     {
-        MenuList this_list;
+        MenuEntryList this_list;
         bool this_update_required;
         bool this_terminate;
         int this_requested_index_change;
+
+        bool this_overlay_requested;
+        std::chrono::system_clock::duration this_overlay_duration;
+        std::string this_overlay_message;
 
         while (!m_terminate)
         {
@@ -72,7 +96,15 @@ namespace textmenu
                 this_terminate = m_terminate;
                 this_requested_index_change = m_requested_index_change;
 
+                this_overlay_requested = m_overlay_requested;
+                if (this_overlay_requested)
+                {
+                    this_overlay_duration = m_overlay_duration;
+                    this_overlay_message = m_overlay_message;
+                }
+
                 m_update_required = false;
+                m_overlay_requested = false;
                 m_requested_index_change = 0;
             }
             
@@ -81,9 +113,15 @@ namespace textmenu
                 break;
             }
 
-            UpdateIndex(this_requested_index_change);
-
             bool draw = false;
+
+            if (this_overlay_requested)
+            {
+                RenderOverlay(this_overlay_message, this_overlay_duration);
+                draw = true;
+            }
+
+            UpdateIndex(this_requested_index_change);
 
             if (this_update_required)
             {
@@ -145,6 +183,13 @@ namespace textmenu
         }
     }
 
+    void TextMenuView::RenderOverlay(const std::string& message,
+        std::chrono::system_clock::duration duration)
+    {
+        m_menu_renderer->DrawOverlay(message);
+        std::this_thread::sleep_for(duration);
+    }
+
     void TextMenuView::ResetScrollState()
     {
         m_scroll_direction = ScrollDirection::None;
@@ -154,7 +199,7 @@ namespace textmenu
         m_last_input_time = clock::now();
     }
 
-    bool TextMenuView::ScrollSelectedLine(const MenuList& list)
+    bool TextMenuView::ScrollSelectedLine(const MenuEntryList& list)
     {
         if (list.size() > 0)
         {

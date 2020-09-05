@@ -2,6 +2,12 @@
 
 This project is copyright (C) 2020 Jonathan Moscardini, all rights reserved.
 
+## Dependencies
+
+libyaml-cpp
+libevdev
+libi2c
+
 ## Third party libraries & derived sources
 [AndrewFromMelbourne/libSSD1306](https://github.com/AndrewFromMelbourne/libSSD1306) - [MIT license](https://github.com/AndrewFromMelbourne/libSSD1306/blob/master/LICENSE)
 

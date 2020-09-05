@@ -1,6 +1,7 @@
 #ifndef SRC_IMENURENDERER_H
 #define SRC_IMENURENDERER_H
 
+#include <chrono>
 #include <vector>
 
 #include "MenuEntry.h"
@@ -12,9 +13,15 @@ namespace textmenu
     public:
         virtual ~IMenuView() noexcept = default;
 
-        /// @brief Update the current list of entries.
+        /// @brief Replace the current list of entries.
         /// @param entries: the list of MenuEntries to display
-        virtual void UpdateEntries(const MenuList& entries) = 0;
+        virtual void LoadNewMenu(const MenuEntryList& entries) = 0;
+
+        /// @brief Draw a temporary message overlay (like a pop-up notification).
+        /// @param text: message to display
+        /// @param duration: duration to display before reverting to the menu
+        virtual void RequestTimedOverlay(const std::string& message,
+                                 std::chrono::system_clock::duration duration) = 0;
 
         /// @brief Request the selected/highlighted index change by a given offset.
         ///        Will clamp requests to the list limits automatically.

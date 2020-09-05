@@ -20,10 +20,11 @@ namespace textmenu
             SSD1306MenuRenderer(const int reset_gpio, const int i2c_bus, const uint8_t address);
             ~SSD1306MenuRenderer() override;
 
-            void DrawMenuList(const MenuList& menu, 
+            void DrawMenuList(const MenuEntryList& menu, 
                               int list_start_index,
                               int selected_index,
                               int selected_line_start_index) override;
+            void DrawOverlay(const std::string& message) override;
             void Sleep() override;
             void Wake() override;
             int GetMaxRows() override;

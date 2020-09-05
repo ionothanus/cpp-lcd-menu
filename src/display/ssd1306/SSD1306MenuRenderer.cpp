@@ -137,7 +137,24 @@ namespace textmenu
             return m_screen_state;
         }
 
-        void SSD1306MenuRenderer::DrawMenuList(const MenuList& menu, int list_start_index, int selected_index, int selected_line_start_index)
+        void SSD1306MenuRenderer::DrawOverlay(const std::string& message)
+        {
+            SSD1306::OledBitmap<SSD1306::OledI2C::Width, SSD1306::sc_fontHeight8x16> menu_selected{};
+            SSD1306::OledBitmap<SSD1306::OledI2C::Width, SSD1306::OledI2C::Height> buffer{};
+            menu_selected.fill();
+            buffer.clear();
+            buffer.setFrom(menu_selected, SSD1306::OledPoint{0, 0});
+            SSD1306::drawString8x16(SSD1306::OledPoint{0, 0},
+                                    message,
+                                    SSD1306::PixelStyle::Unset,
+                                    buffer);
+            
+            m_oled->setFrom(buffer);
+
+            m_oled->displayUpdate();
+        }
+
+        void SSD1306MenuRenderer::DrawMenuList(const MenuEntryList& menu, int list_start_index, int selected_index, int selected_line_start_index)
         {
             SSD1306::OledBitmap<SSD1306::OledI2C::Width, SSD1306::sc_fontHeight8x16> menu_selected{};
             SSD1306::OledBitmap<SSD1306::OledI2C::Width, SSD1306::OledI2C::Height> buffer{};

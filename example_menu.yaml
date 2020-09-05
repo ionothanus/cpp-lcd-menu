@@ -1,0 +1,27 @@
+menu: # the top level menu - only one
+  - submenu: # a menu node
+      name: fan
+      display_text: "Fan"
+      entries:
+      - submenu: 
+          name: fan_power
+          display_text: "Fan power"
+          entries: # leaf entries 
+            - display_text: "Fan on"
+              action: "turn_fan_on"
+            - display_text: "Fan off"
+              action: "turn_fan_off"
+      - submenu:
+          name: fan_speed
+          display_text: "Fan control"
+          entries:
+            - display_text: "Fan speed up"
+              action: "fan_speed_up"
+            - display_text: "Fan speed down"
+              action: "fan_speed_down"
+  - submenu:
+      name: system
+      display_text: "System menu"
+      entries:
+        - display_text: "Quit"
+          action: "Quit"

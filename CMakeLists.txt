@@ -34,6 +34,8 @@ add_library(displayAdafruit16x2 STATIC src/display/adafruit-16x2-buttons/Adafrui
                                        src/input/adafruit-16x2-buttons/Adafruit16x2ButtonController.cpp
                                        src/driver/Adafruit16x2DeviceWrapper.cpp)
 add_library(inputEvdevRotaryController STATIC src/input/evdev/EvdevRotaryController.cpp)
+add_library(menu STATIC src/menu/MenuLoader.cpp
+                        src/menu/MenuController.cpp)
 
 target_include_directories(text-menu PUBLIC .)
 target_include_directories(text-menu PUBLIC ./src)
@@ -44,9 +46,11 @@ target_link_libraries(inputEvdevRotaryController PUBLIC evdev)
 target_link_libraries(inputEvdevRotaryController PUBLIC text-menu-shared)
 target_link_libraries(displaySSD1306 PUBLIC SSD1306)
 target_link_libraries(displayAdafruit16x2 PUBLIC adafruit-16x2)
+target_link_libraries(menu PUBLIC yaml-cpp)
 target_link_libraries(text-menu PUBLIC displaySSD1306)
 target_link_libraries(text-menu PUBLIC displayAdafruit16x2)
 target_link_libraries(text-menu PUBLIC inputEvdevRotaryController)
+target_link_libraries(text-menu PUBLIC menu)
 target_link_libraries(text-menu PUBLIC menuview)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
