@@ -1,3 +1,13 @@
+devices: # the devices used to render & control the menu, including all options
+  display: 
+    device: ssd1306
+    reset_gpio: 4
+    i2c_bus: 1
+    i2c_address: 0x3D
+  controller: 
+    device: evdevrotary
+    button_device_path: "/dev/input/event0"
+    rotary_device_path: "/dev/input/event1"
 menu: # the top level menu - only one
   - submenu: # a menu node
       name: fan

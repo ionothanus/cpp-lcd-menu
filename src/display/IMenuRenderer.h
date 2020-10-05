@@ -1,7 +1,7 @@
 #ifndef DISPLAY_IMENURENDERER_H
 #define DISPLAY_IMENURENDERER_H
 
-#include "MenuEntry.h"
+#include "menu/MenuTypes.h"
 
 namespace textmenu
 {
@@ -18,7 +18,7 @@ namespace textmenu
         public:
             virtual ~IMenuRenderer() = default;
 
-            virtual void DrawMenuList(const MenuEntryList& menu, int list_start_index, int selected_index, int selected_line_start_index) = 0;
+            virtual void DrawMenuList(const menu::MenuEntryList& menu, int list_start_index, int selected_index, int selected_line_start_index) = 0;
             virtual void DrawOverlay(const std::string& message) = 0;
             virtual void Sleep() = 0;
             virtual void Wake() = 0;

@@ -6,6 +6,7 @@
 
 #include "BasicTask.h"
 #include "input/IMenuInputController.h"
+#include "menu/MenuLoader.h"
 
 namespace textmenu
 {
@@ -16,6 +17,8 @@ namespace textmenu
         public:
             EvdevRotaryController(const std::string& rotary_path, const std::string& button_path, int polling_interval = 100);
             ~EvdevRotaryController() override;
+
+            static std::unique_ptr<EvdevRotaryController> ConstructFromConfigMap(const menu::SettingsMap& config);
 
             void RegisterRelativeVerticalHandler(RelativeVerticalHandler callback) override;
             void RegisterSelectButtonHandler(PushButtonHandler callback) override;

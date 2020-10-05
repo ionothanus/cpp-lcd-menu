@@ -7,7 +7,7 @@
 #include <stack>
 #include <unordered_map>
 
-#include "MenuEntry.h"
+#include "menu/MenuTypes.h"
 #include "menuview/IMenuView.h"
 #include "input/IMenuInputController.h"
 
@@ -38,7 +38,7 @@ namespace textmenu
             void DisplayResult(const std::string& result);
 
             std::unordered_map<std::string, MenuAction> m_action_map;
-            std::stack<textmenu::MenuEntryList> m_nav_history;
+            std::stack<menu::MenuEntryList> m_nav_history;
 
             std::shared_ptr<IMenuView> m_menuview;
             std::shared_ptr<input::IMenuInputController> m_input;

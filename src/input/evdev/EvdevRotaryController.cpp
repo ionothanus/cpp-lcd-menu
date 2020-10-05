@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <exception>
+#include <sstream>
 
 #include "input/evdev/EvdevRotaryController.h"
 
@@ -57,6 +58,47 @@ namespace textmenu
             }
         }
 
+        std::unique_ptr<EvdevRotaryController> EvdevRotaryController::ConstructFromConfigMap(const menu::SettingsMap& config)
+        {
+            //const std::string& rotary_path, const std::string& button_path, int polling_interval)
+            const std::string ROTARY_PATH_KEY{"rotary_device_path"};
+            const std::string BUTTON_PATH_KEY{"button_device_path"};
+            const std::string OPTIONAL_POLLING_INTERVAL_KEY{"polling_interval_ms"};
+
+            std::string rotary_path{};
+            std::string button_path{};
+
+            try
+            {
+                rotary_path = config.at(ROTARY_PATH_KEY);
+                button_path = config.at(BUTTON_PATH_KEY);
+            }
+            catch (std::out_of_range& out_of_range)
+            {
+                std::stringstream sstream{};
+                sstream << "Mandatory parameter for EvdevRotaryController missing from YAML configuration: " << out_of_range.what();
+                throw new std::runtime_error{ sstream.str() };
+            }
+
+            auto polling_interval_iter{ config.find(OPTIONAL_POLLING_INTERVAL_KEY) };
+
+            if (polling_interval_iter != config.end())
+            {
+                try
+                {
+                    int polling_interval{ std::stoi(polling_interval_iter->second, 0, 0) };
+
+                    return std::make_unique<EvdevRotaryController>(rotary_path, button_path, polling_interval);
+                }
+                catch (std::invalid_argument& invalid_argument)
+                {
+                    return std::make_unique<EvdevRotaryController>(rotary_path, button_path);
+                }
+            }
+
+            return std::make_unique<EvdevRotaryController>(rotary_path, button_path);
+        }
+
         void EvdevRotaryController::RegisterSelectButtonHandler(PushButtonHandler handler)
         {
             m_button_handler = handler;
@@ -91,11 +133,6 @@ namespace textmenu
 
                 if (ev_rotary_rc == 0)
                 {
-                    printf("Event: %s %s %d\n",
-                       libevdev_event_type_get_name(ev_rotary.type),
-                       libevdev_event_code_get_name(ev_rotary.type, ev_rotary.code),
-                       ev_rotary.value);
-                    
                     if (ev_rotary.type == EV_REL)
                     {
                         m_rotation_handler(ev_rotary.value);
@@ -105,11 +142,6 @@ namespace textmenu
                 if (ev_button_rc == 0)
                 {
                     std::string event_code_name{ libevdev_event_code_get_name(ev_button.type, ev_button.code) };
-
-                    printf("Event: %s %s %d\n",
-                           libevdev_event_type_get_name(ev_button.type),
-                           event_code_name.c_str(),
-                           ev_button.value);
 
                     if (event_code_name == "KEY_ENTER")
                     {

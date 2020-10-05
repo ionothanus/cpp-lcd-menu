@@ -24,14 +24,23 @@ void signal_handler(int signum)
     }
 }
 
-const std::string ROTARY_DEV_PATH{"/dev/input/event1"};
 const std::string BUTTON_DEV_PATH{"/dev/input/event0"};
-
-
+const std::string ROTARY_DEV_PATH{"/dev/input/event1"};
 
 int main(int argc, char** argv)
 {
-    textmenu::MenuEntry menu_list{ textmenu::menu::LoadYamlMenu(std::string{argv[1]}) };
+    using textmenu::display::IMenuRenderer;
+    using textmenu::input::IMenuInputController;
+    using textmenu::display::SSD1306MenuRenderer;
+    using textmenu::driver::Adafruit16x2DeviceWrapper;
+    using textmenu::display::Adafruit16x2MenuRenderer;
+    using textmenu::input::Adafruit16x2ButtonController;
+
+    using textmenu::input::EvdevRotaryController;
+
+    textmenu::menu::MenuDefinition menu_definition{textmenu::menu::LoadYamlMenu(std::string{argv[1]})};
+
+    textmenu::menu::MenuEntry menu_list{ menu_definition.first };
 
     if (signal(SIGINT, signal_handler) == SIG_ERR)
     {
@@ -40,12 +49,12 @@ int main(int argc, char** argv)
 
     std::cout << "text-menu demo 2" << std::endl;
 
-    std::unique_ptr<textmenu::display::IMenuRenderer> renderer{std::make_unique<textmenu::display::SSD1306MenuRenderer>(4, 1, 0x3D)};
+    std::unique_ptr<IMenuRenderer> renderer{SSD1306MenuRenderer::ConstructFromConfigMap(menu_definition.second.m_display_settings)};
     std::shared_ptr<textmenu::TextMenuView> menuview{std::make_unique<textmenu::TextMenuView>(std::move(renderer))};
     std::shared_ptr<textmenu::ITask> menuviewtask{menuview};
 
-    std::shared_ptr<textmenu::input::EvdevRotaryController> evdev_rotary_controller{ std::make_shared<textmenu::input::EvdevRotaryController>(ROTARY_DEV_PATH, BUTTON_DEV_PATH) };
-    std::shared_ptr<textmenu::input::IMenuInputController> controller{ evdev_rotary_controller };
+    std::shared_ptr<EvdevRotaryController> evdev_rotary_controller{ EvdevRotaryController::ConstructFromConfigMap(menu_definition.second.m_controller_settings) };
+    std::shared_ptr<IMenuInputController> controller{ evdev_rotary_controller };
     std::shared_ptr<textmenu::ITask> controller_task{ evdev_rotary_controller };
 
     textmenu::menu::MenuController menu_controller{menu_list.submenu, std::move(menuview), controller};
@@ -63,6 +72,29 @@ int main(int argc, char** argv)
     menuviewtask->Run();
     controller_task->Run();
 
+    //testing
+    textmenu::menu::SettingsMap test_map{{"i2c_bus", "1" }, {"i2c_address", "0x20"}};
+    std::shared_ptr<Adafruit16x2DeviceWrapper> adafruit_driver{Adafruit16x2DeviceWrapper::ConstructFromConfigMap(test_map)};
+    std::unique_ptr<Adafruit16x2MenuRenderer> adafruit_display{std::make_unique<Adafruit16x2MenuRenderer>(adafruit_driver)};
+
+    std::shared_ptr<Adafruit16x2ButtonController> adafruit_buttons{std::make_shared<Adafruit16x2ButtonController>(adafruit_driver)};
+    std::shared_ptr<IMenuInputController> buttons{adafruit_buttons};
+    std::shared_ptr<textmenu::ITask> button_task{adafruit_buttons};
+
+    std::unique_ptr<IMenuRenderer> lcd{std::move(adafruit_display)};
+    std::shared_ptr<textmenu::TextMenuView> lcd_menuview{std::make_unique<textmenu::TextMenuView>(std::move(lcd))};
+    std::shared_ptr<textmenu::ITask> lcd_task{lcd_menuview};
+
+    textmenu::menu::MenuController lcd_controller{menu_list.submenu, lcd_menuview, buttons};
+
+    lcd_task->Run();
+    button_task->Run();
+
+    lcd_controller.RegisterAction("Quit", textmenu::menu::MenuAction{ [&](){
+        exit_requested = true;
+        return true;
+    }, false });
+
     while (!exit_requested)
     {
         usleep(500);
@@ -70,6 +102,8 @@ int main(int argc, char** argv)
 
     menuviewtask->Stop();
     controller_task->Stop();
+    lcd_task->Stop();
+    button_task->Stop();
 
     return 0;
 }

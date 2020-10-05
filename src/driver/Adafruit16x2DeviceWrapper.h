@@ -5,6 +5,7 @@
 
 #include "CharLCD/src/CharLCD.h"
 
+#include "menu/MenuTypes.h"
 #include "ThreadSafe.hpp"
 
 namespace textmenu
@@ -15,6 +16,8 @@ namespace textmenu
         {
         public:
             Adafruit16x2DeviceWrapper(int i2c_bus, int i2c_address);
+
+            static std::unique_ptr<Adafruit16x2DeviceWrapper> ConstructFromConfigMap(const menu::SettingsMap& config);
 
             ThreadSafe<CharLCD>& GetLcdHandle();
 

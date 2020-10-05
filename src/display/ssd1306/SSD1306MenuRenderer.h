@@ -17,10 +17,12 @@ namespace textmenu
         class SSD1306MenuRenderer : public IMenuRenderer
         {
         public:
+            static std::unique_ptr<SSD1306MenuRenderer> ConstructFromConfigMap(const menu::SettingsMap& config);
+
             SSD1306MenuRenderer(const int reset_gpio, const int i2c_bus, const uint8_t address);
             ~SSD1306MenuRenderer() override;
 
-            void DrawMenuList(const MenuEntryList& menu, 
+            void DrawMenuList(const menu::MenuEntryList& menu, 
                               int list_start_index,
                               int selected_index,
                               int selected_line_start_index) override;

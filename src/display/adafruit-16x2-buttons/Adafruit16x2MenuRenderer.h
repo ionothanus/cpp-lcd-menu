@@ -16,7 +16,7 @@ namespace textmenu
             Adafruit16x2MenuRenderer(std::shared_ptr<driver::Adafruit16x2DeviceWrapper>& lcd);
             ~Adafruit16x2MenuRenderer() override;
 
-            void DrawMenuList(const MenuEntryList& menu, 
+            void DrawMenuList(const menu::MenuEntryList& menu, 
                               int list_start_index,
                               int selected_index,
                               int selected_line_start_index) override;

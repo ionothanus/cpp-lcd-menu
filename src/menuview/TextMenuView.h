@@ -17,7 +17,7 @@ namespace textmenu
         TextMenuView(std::unique_ptr<display::IMenuRenderer> menu_renderer);
         ~TextMenuView() override = default;
 
-        void LoadNewMenu(const MenuEntryList& entries) override;
+        void LoadNewMenu(const menu::MenuEntryList& entries) override;
         void RequestTimedOverlay(const std::string& message,
                                  std::chrono::system_clock::duration duration) override;
         void RequestIndexChange(int rel_offset) override;
@@ -29,14 +29,14 @@ namespace textmenu
         void ThreadFunction() override;
         void UpdateIndex(int this_requested_index_change);
         void ResetScrollState();
-        bool ScrollSelectedLine(const MenuEntryList& list);
+        bool ScrollSelectedLine(const menu::MenuEntryList& list);
         void RenderOverlay(const std::string& message,
                            std::chrono::system_clock::duration duration);
 
         std::unique_ptr<display::IMenuRenderer> m_menu_renderer;
 
         // input variables from consumers - must be thread-safe
-        MenuEntryList m_local_list;
+        menu::MenuEntryList m_local_list;
         std::atomic<bool> m_update_required;
         std::atomic<int> m_requested_index_change;
         std::atomic<bool> m_overlay_requested;

@@ -93,7 +93,7 @@ namespace textmenu
             m_lcd->GetLcdHandle()->print(string_to_render.substr(0, MAX_LINE_LENGTH));
         }
 
-        void Adafruit16x2MenuRenderer::DrawMenuList(const MenuEntryList& menu, int list_start_index, int selected_index, int selected_line_start_index)
+        void Adafruit16x2MenuRenderer::DrawMenuList(const menu::MenuEntryList& menu, int list_start_index, int selected_index, int selected_line_start_index)
         {
             int rowCount{ 0 };
 
@@ -104,7 +104,7 @@ namespace textmenu
             for (int i = list_start_index; i < menu.size(); i++)
             {
                 std::string line{blank_line};
-                MenuEntry entry = menu[i];
+                menu::MenuEntry entry = menu[i];
                 size_t size_to_render{ std::clamp(entry.displayValue.size(), 0U, MAX_LINE_LENGTH) };
                 std::string string_to_render{ line.replace(0, size_to_render, entry.displayValue) };
 

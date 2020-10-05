@@ -4,7 +4,7 @@
 #include <chrono>
 #include <vector>
 
-#include "MenuEntry.h"
+#include "menu/MenuTypes.h"
 
 namespace textmenu
 {
@@ -15,7 +15,7 @@ namespace textmenu
 
         /// @brief Replace the current list of entries.
         /// @param entries: the list of MenuEntries to display
-        virtual void LoadNewMenu(const MenuEntryList& entries) = 0;
+        virtual void LoadNewMenu(const menu::MenuEntryList& entries) = 0;
 
         /// @brief Draw a temporary message overlay (like a pop-up notification).
         /// @param text: message to display

@@ -48,7 +48,7 @@ namespace textmenu
         
         void MenuController::ActionHandler(bool selected)
         {
-            textmenu::MenuEntry selected_entry{m_nav_history.top()[m_menuview->GetCurrentIndex()]};
+            MenuEntry selected_entry{m_nav_history.top()[m_menuview->GetCurrentIndex()]};
 
             if (selected)
             {

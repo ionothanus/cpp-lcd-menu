@@ -24,7 +24,7 @@ namespace textmenu
           m_last_input_time{clock::now()}
     {}
 
-    void TextMenuView::LoadNewMenu(const MenuEntryList& entries)
+    void TextMenuView::LoadNewMenu(const menu::MenuEntryList& entries)
     {
         {
             std::lock_guard<std::mutex> lock {m_cv_mutex};
@@ -72,7 +72,7 @@ namespace textmenu
 
     void TextMenuView::ThreadFunction()
     {
-        MenuEntryList this_list;
+        menu::MenuEntryList this_list;
         bool this_update_required;
         bool this_terminate;
         int this_requested_index_change;
@@ -199,7 +199,7 @@ namespace textmenu
         m_last_input_time = clock::now();
     }
 
-    bool TextMenuView::ScrollSelectedLine(const MenuEntryList& list)
+    bool TextMenuView::ScrollSelectedLine(const menu::MenuEntryList& list)
     {
         if (list.size() > 0)
         {

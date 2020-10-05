@@ -1,7 +1,8 @@
 #include <algorithm>
-#include <thread>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
+#include <thread>
 
 #include "libSSD1306/lib/OledGraphics.h"
 #include "SSD1306MenuRenderer.h"
@@ -70,7 +71,7 @@ namespace textmenu
 
             {
                 std::string file_path{ gpio_file_sstream.str() };
-                std::ofstream gpio_file{ file_path};
+                std::ofstream gpio_file{ file_path };
 
                 if (!gpio_file)
                 {
@@ -81,7 +82,6 @@ namespace textmenu
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 gpio_file << "1";
             }
-
         }
 
         std::unique_ptr<SSD1306::OledI2C> SSD1306MenuRenderer::CreateOledI2C(int i2c_bus, uint8_t address)
@@ -99,6 +99,40 @@ namespace textmenu
             m_oled = std::move(CreateOledI2C(i2c_bus, address));
             m_oled->clear();
             m_oled->displayUpdate();
+        }
+
+        std::unique_ptr<SSD1306MenuRenderer> SSD1306MenuRenderer::ConstructFromConfigMap(const menu::SettingsMap& config)
+        {
+            const std::string RESET_GPIO_KEY{"reset_gpio"};
+            const std::string I2C_BUS_KEY{"i2c_bus"};
+            const std::string I2C_ADDRESS_KEY{"i2c_address"};
+
+            int reset_gpio{};
+            int i2c_bus{};
+            uint8_t i2c_address{};
+
+            try
+            {
+                reset_gpio = std::stoi(config.at(RESET_GPIO_KEY));
+                i2c_bus = std::stoi(config.at(I2C_BUS_KEY));
+                // extra parameters automatically convert from the appropriate base
+                i2c_address = std::stoi(config.at(I2C_ADDRESS_KEY), 0, 0);
+            }
+            catch (std::invalid_argument& invalid_argument)
+            {
+                std::stringstream sstream{};
+                sstream << "Unable to convert parameter from YAML file for SSD1306 construction: "
+                        << invalid_argument.what();
+                throw new std::runtime_error{ sstream.str() };
+            }
+            catch (std::out_of_range& out_of_range)
+            {
+                std::stringstream sstream{};
+                sstream << "Mandatory parameter for SSD1306 missing from YAML configuration: " << out_of_range.what();
+                throw new std::runtime_error{ sstream.str() };
+            }
+
+            return std::make_unique<SSD1306MenuRenderer>(reset_gpio, i2c_bus, i2c_address);
         }
 
         SSD1306MenuRenderer::~SSD1306MenuRenderer()
@@ -154,7 +188,7 @@ namespace textmenu
             m_oled->displayUpdate();
         }
 
-        void SSD1306MenuRenderer::DrawMenuList(const MenuEntryList& menu, int list_start_index, int selected_index, int selected_line_start_index)
+        void SSD1306MenuRenderer::DrawMenuList(const menu::MenuEntryList& menu, int list_start_index, int selected_index, int selected_line_start_index)
         {
             SSD1306::OledBitmap<SSD1306::OledI2C::Width, SSD1306::sc_fontHeight8x16> menu_selected{};
             SSD1306::OledBitmap<SSD1306::OledI2C::Width, SSD1306::OledI2C::Height> buffer{};
@@ -165,7 +199,7 @@ namespace textmenu
 
             for (int i = list_start_index; i < menu.size(); i++)
             {
-                MenuEntry entry = menu[i];
+                menu::MenuEntry entry = menu[i];
                 std::string string_to_render{ entry.displayValue };
 
                 if (i == selected_index)
