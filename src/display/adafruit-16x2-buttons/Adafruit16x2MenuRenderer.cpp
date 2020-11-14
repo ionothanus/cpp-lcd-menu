@@ -1,3 +1,8 @@
+// Copyright (c) 2020 Jonathan Moscardini
+// 
+// Licensed under the MIT License
+// http://www.opensource.org/licenses/MIT
+
 #include <algorithm>
 
 #include "Adafruit16x2MenuRenderer.h"
@@ -111,7 +116,6 @@ namespace textmenu
                 //scrolling
                 if (i == selected_index)
                 {
-                    //buffer.setFrom(menu_selected, SSD1306::OledPoint{0, rowCount * SSD1306::sc_fontHeight8x16});
                     string_to_render = "*" + string_to_render.substr(selected_line_start_index, string_to_render.length() - selected_line_start_index);
                 }
 

@@ -1,3 +1,8 @@
+// Copyright (c) 2020 Jonathan Moscardini
+// 
+// Licensed under the MIT License
+// http://www.opensource.org/licenses/MIT
+
 #ifndef SRC_DISPLAY_TEXTMENURENDERER_H
 #define SRC_DISPLAY_TEXTMENURENDERER_H
 
@@ -11,12 +16,19 @@
 
 namespace textmenu
 {
+    /// @brief Handles rendering a menu on a character LCD,
+    ///        including selection highlighting and long-line scrolling.
     class TextMenuView : public IMenuView, public BasicTask
     {
     public:
+        /// @brief Construct a new TextMenuView object
+        /// 
+        /// @param menu_renderer The device used to render this menu.
         TextMenuView(std::unique_ptr<display::IMenuRenderer> menu_renderer);
         ~TextMenuView() override = default;
 
+        // IMenuView overrides
+        // These are described in IMenuView.h.
         void LoadNewMenu(const menu::MenuEntryList& entries) override;
         void RequestTimedOverlay(const std::string& message,
                                  std::chrono::system_clock::duration duration) override;

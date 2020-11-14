@@ -1,4 +1,6 @@
-devices: # the devices used to render & control the menu, including all options
+# the devices used to render & control the menu, including all options.
+# only one display & one controller per file, please.
+devices:
   display: 
     device: ssd1306
     reset_gpio: 4
@@ -8,10 +10,13 @@ devices: # the devices used to render & control the menu, including all options
     device: evdevrotary
     button_device_path: "/dev/input/event0"
     rotary_device_path: "/dev/input/event1"
-menu: # the top level menu - only one
+
+# the top level menu to display on the above devices
+# only one menu per file, please.
+menu:
   - submenu: # a menu node
-      name: fan
-      display_text: "Fan"
+      name: fan # the programmatic name of this menu entry - used for registering actions
+      display_text: "Fan" # the text to display for this menu entry
       entries:
       - submenu: 
           name: fan_power
@@ -24,7 +29,7 @@ menu: # the top level menu - only one
       - submenu:
           name: fan_speed
           display_text: "Fan control"
-          entries:
+          entries: # leaf entries
             - display_text: "Fan speed up"
               action: "fan_speed_up"
             - display_text: "Fan speed down"

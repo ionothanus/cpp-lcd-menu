@@ -1,3 +1,8 @@
+// Copyright (c) 2020 Jonathan Moscardini
+// 
+// Licensed under the MIT License
+// http://www.opensource.org/licenses/MIT
+
 #ifndef SRC_BASICTASK_H
 #define SRC_BASICTASK_H
 
@@ -9,6 +14,7 @@
 
 namespace textmenu
 {
+    /// @brief A simple thread implementation of an ITask.
     class BasicTask : public ITask
     {
     public:

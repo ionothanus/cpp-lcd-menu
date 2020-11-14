@@ -1,3 +1,7 @@
+// Copyright (c) 2020 Jonathan Moscardini
+// 
+// Licensed under the MIT License
+// http://www.opensource.org/licenses/MIT
 
 #include <iostream>
 

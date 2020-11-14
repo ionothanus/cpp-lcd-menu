@@ -1,3 +1,7 @@
+// Copyright (c) 2020 Jonathan Moscardini
+// 
+// Licensed under the MIT License
+// http://www.opensource.org/licenses/MIT
 
 #include "input/adafruit-16x2-buttons/Adafruit16x2ButtonController.h"
 

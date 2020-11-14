@@ -61,5 +61,39 @@
         "map": "cpp",
         "set": "cpp",
         "iomanip": "cpp"
-    }
+    },
+
+    "psi-header.config": {
+        "license": "MIT",
+        "author": "Jonathan Moscardini",
+        "company": "Jonathan Moscardini"
+    
+    },
+    "psi-header.lang-config": [
+        {
+            "language": "*",
+            "begin": "",
+            "end": "",
+        },
+        {
+            "language": "cpp",
+            "begin": "",
+            "end": "",
+            "prefix": "// ",
+        }
+    ],
+    "psi-header.templates": [
+        {
+            "language": "*",
+            "begin": "",
+            "end": "",
+            "prefix": "// ",
+            "template": [
+                "Copyright (c) <<year>> <<author>>",
+                "",
+                "Licensed under the <<licensename>>",
+                "<<licenseurl>>",
+            ],
+        }
+    ]
 }
